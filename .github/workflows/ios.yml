@@ -28,26 +28,21 @@ jobs:
           echo "Using default scheme: $default"
           echo "scheme=$default" >> $GITHUB_OUTPUT
 
-      - name: Build
+      - name: Build for macOS (no signing)
         run: |
-          scheme="PingU"
-            platform="iOS Simulator"
-            destination="platform=$platform,name=iPhone 14,OS=latest"
-
-          if ls *.xcworkspace 1>/dev/null 2>&1; then
-            filetype_parameter="-workspace"
-            file_to_build=$(ls *.xcworkspace | head -n 1)
-          else
-            filetype_parameter="-project"
-            file_to_build=$(ls *.xcodeproj | head -n 1)
+          scheme=${{ steps.scheme.outputs.default_scheme }}
+          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then 
+            filetype_parameter="workspace" 
+            file_to_build="`ls -A | grep -i \\.xcworkspace\$`" 
+          else 
+            filetype_parameter="project" 
+            file_to_build="`ls -A | grep -i \\.xcodeproj\$`" 
           fi
-
-          echo "Building using $file_to_build with $filetype_parameter"
-
           xcodebuild build-for-testing \
-            $filetype_parameter "$file_to_build" \
             -scheme "$scheme" \
-            -destination "$destination"
+            -"$filetype_parameter" "$file_to_build" \
+            -destination "platform=iOS Simulator" \
+            CODE_SIGNING_ALLOWED=NO
 
       - name: Test
         run: |
