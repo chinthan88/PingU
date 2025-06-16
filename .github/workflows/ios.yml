@@ -22,7 +22,7 @@ jobs:
           xcodebuild build-for-testing \
             -project PingU.xcodeproj \
             -scheme PingU \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.4' \
             CODE_SIGNING_ALLOWED=NO \
             -resultBundlePath BuildResults
 
@@ -31,11 +31,11 @@ jobs:
           xcodebuild test-without-building \
             -project PingU.xcodeproj \
             -scheme PingU \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.4' \
             CODE_SIGNING_ALLOWED=NO \
             -resultBundlePath TestResults
 
-      - name: Upload test results
+      - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: xcode-test-results
