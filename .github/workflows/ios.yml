@@ -24,8 +24,8 @@ jobs:
         id: simulator
         run: |
           SIMULATOR_INFO=$(xcrun simctl list devices available | grep -E "iPhone" | grep -v unavailable | head -n 1)
-          SIMULATOR_NAME=$(echo "$SIMULATOR_INFO" | awk -F '[()]' '{print $1}' | xargs)
-          SIMULATOR_OS=$(echo "$SIMULATOR_INFO" | awk -F '[()]' '{print $2}' | xargs)
+          SIMULATOR_NAME=$(echo "$SIMULATOR_INFO" | sed -E 's/\(([^()]*)\)//g' | xargs)
+          SIMULATOR_OS=$(echo "$SIMULATOR_INFO" | grep -oE '\(([^()]*)\)' | tr -d '()')
 
           echo "SIMULATOR_NAME=$SIMULATOR_NAME" >> $GITHUB_ENV
           echo "SIMULATOR_OS=$SIMULATOR_OS" >> $GITHUB_ENV
