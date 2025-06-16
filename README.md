@@ -1,5 +1,7 @@
 # 🐧 PingU — A Simple SwiftUI Chat App
 
+[![iOS Build](https://github.com/chinthan88/PingU/actions/workflows/ios.yml/badge.svg)](https://github.com/chinthan88/PingU/actions/workflows/ios.yml)
+
 **PingU** is a cleanly architected iOS chat application built with **SwiftUI**, **Combine**, and **Clean Architecture**, following **SOLID principles**.
 
 ---
