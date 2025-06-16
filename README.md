@@ -17,6 +17,13 @@
 
 ---
 
+## 📸 Screenshot
+
+| PingU Messaging Demo |
+|----------------------|
+| <img src="https://raw.githubusercontent.com/chinthan88/PingU/main/assets/PingU.gif" alt="PingU Demo" style="width:250px; border-radius:16px; box-shadow: 0 0 10px rgba(0,0,0,0.15);"/> |
+
+
 ## 📁 Project Structure
 
 ```
