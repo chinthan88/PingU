@@ -12,23 +12,22 @@ jobs:
     runs-on: macos-14 # required for Xcode 16.x
 
     steps:
-      - name: Set up Xcode 16.2
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set Xcode version
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: '16.2'
 
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Confirm Xcode version
+        run: xcodebuild -version
 
-      - name: Set Default Scheme
-        id: set_scheme
-        run: |
-          scheme_list=$(xcodebuild -list -json)
-          default=$(echo "$scheme_list" | ruby -e "require 'json'; puts JSON.parse(STDIN.read)['project']['targets'][0]")
-          echo "Using default scheme: $default"
-          echo "scheme=$default" >> $GITHUB_OUTPUT
+      - name: Set scheme
+        id: scheme
+        run: echo "default_scheme=PingU" >> $GITHUB_OUTPUT
 
-      - name: Build for macOS (no signing)
+      - name: Build for iOS (no signing)
         run: |
           scheme=${{ steps.scheme.outputs.default_scheme }}
           if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then 
@@ -44,19 +43,21 @@ jobs:
             -destination "platform=iOS Simulator" \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Test
+      - name: Run iOS Tests (no signing)
         run: |
-          scheme="${{ steps.set_scheme.outputs.scheme }}"
-          platform="iOS Simulator"
-          destination="platform=$platform,name=iPhone 14,OS=latest"
-          
-          if ls *.xcworkspace 1>/dev/null 2>&1; then
-            filetype_parameter="workspace"
-            file_to_build=$(ls *.xcworkspace | head -n 1)
-          else
-            filetype_parameter="project"
-            file_to_build=$(ls *.xcodeproj | head -n 1)
+          scheme=${{ steps.scheme.outputs.default_scheme }}
+          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then 
+            filetype_parameter="workspace" 
+            file_to_build="`ls -A | grep -i \\.xcworkspace\$`" 
+          else 
+            filetype_parameter="project" 
+            file_to_build="`ls -A | grep -i \\.xcodeproj\$`" 
           fi
+          xcodebuild test-without-building \
+            -scheme "$scheme" \
+            -"$filetype_parameter" "$file_to_build" \
+            -destination "platform=iOS Simulator" \
+            CODE_SIGNING_ALLOWED=NO
           
           xcodebuild test-without-building \
             -scheme "$scheme" \
