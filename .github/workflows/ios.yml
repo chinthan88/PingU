@@ -41,7 +41,7 @@ jobs:
             -project PingU.xcodeproj \
             -scheme PingU \
             -sdk iphonesimulator \
-            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS" \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME,OS=17.5" \
             -resultBundlePath BuildResults
 
       - name: Run Tests
@@ -50,7 +50,7 @@ jobs:
             -project PingU.xcodeproj \
             -scheme PingU \
             -sdk iphonesimulator \
-            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS" \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME,OS=17.5" \
             -resultBundlePath TestResults
 
       - name: Upload Test Results (optional)
