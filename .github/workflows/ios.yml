@@ -1,82 +1,45 @@
-name: iOS starter workflow
+name: iOS CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
 
 jobs:
-  build:
-    name: Build and Test PingU scheme using Simulator
-    runs-on: macos-14 # macOS with Xcode 16.x
+  build-and-test:
+    runs-on: macos-14
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set Xcode version
-        uses: maxim-lobanov/setup-xcode@v1
+      - name: Set up Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.3.app
+
+      - name: Show available simulators
+        run: xcrun simctl list devices
+
+      - name: Build for Testing
+        run: |
+          xcodebuild build-for-testing \
+            -project PingU.xcodeproj \
+            -scheme PingU \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' \
+            CODE_SIGNING_ALLOWED=NO \
+            -resultBundlePath BuildResults
+
+      - name: Test Without Building
+        run: |
+          xcodebuild test-without-building \
+            -project PingU.xcodeproj \
+            -scheme PingU \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' \
+            CODE_SIGNING_ALLOWED=NO \
+            -resultBundlePath TestResults
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
         with:
-          xcode-version: '16.2'
-
-      - name: Confirm Xcode version
-        run: xcodebuild -version
-
-      - name: Set scheme
-        id: scheme
-        run: echo "default_scheme=PingU" >> $GITHUB_OUTPUT
-
-      - name: Build for iOS Simulator (no signing)
-        run: |
-          scheme=${{ steps.scheme.outputs.default_scheme }}
-          
-          if ls *.xcworkspace 1>/dev/null 2>&1; then
-            filetype_parameter="workspace"
-            file_to_build=$(ls *.xcworkspace | head -n 1)
-          else
-            filetype_parameter="project"
-            file_to_build=$(ls *.xcodeproj | head -n 1)
-          fi
-
-          echo "Using $filetype_parameter: $file_to_build"
-
-          destination="platform=iOS Simulator,name=iPhone 15,OS=latest"
-
-          xcodebuild build-for-testing \
-            -scheme "$scheme" \
-            -"$filetype_parameter" "$file_to_build" \
-            -destination "$destination" \
-            CODE_SIGNING_ALLOWED=NO || \
-          xcodebuild build-for-testing \
-            -scheme "$scheme" \
-            -"$filetype_parameter" "$file_to_build" \
-            -destination "platform=iOS Simulator" \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Run iOS Unit Tests (no signing)
-        run: |
-          scheme=${{ steps.scheme.outputs.default_scheme }}
-          
-          if ls *.xcworkspace 1>/dev/null 2>&1; then
-            filetype_parameter="workspace"
-            file_to_build=$(ls *.xcworkspace | head -n 1)
-          else
-            filetype_parameter="project"
-            file_to_build=$(ls *.xcodeproj | head -n 1)
-          fi
-
-          echo "Using $filetype_parameter: $file_to_build"
-
-          destination="platform=iOS Simulator,name=iPhone 15,OS=latest"
-
-          xcodebuild test-without-building \
-            -scheme "$scheme" \
-            -"$filetype_parameter" "$file_to_build" \
-            -destination "$destination" \
-            CODE_SIGNING_ALLOWED=NO || \
-          xcodebuild test-without-building \
-            -scheme "$scheme" \
-            -"$filetype_parameter" "$file_to_build" \
-            -destination "platform=iOS Simulator" \
-            CODE_SIGNING_ALLOWED=NO
+          name: xcode-test-results
+          path: TestResults
