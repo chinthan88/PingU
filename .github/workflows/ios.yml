@@ -30,21 +30,23 @@ jobs:
 
       - name: Build
         run: |
-          scheme="${{ steps.set_scheme.outputs.scheme }}"
-          platform="iOS Simulator"
-          destination="platform=$platform,name=iPhone 14,OS=latest"
-          
+          scheme="PingU"
+            platform="iOS Simulator"
+            destination="platform=$platform,name=iPhone 14,OS=latest"
+
           if ls *.xcworkspace 1>/dev/null 2>&1; then
-            filetype_parameter="workspace"
+            filetype_parameter="-workspace"
             file_to_build=$(ls *.xcworkspace | head -n 1)
           else
-            filetype_parameter="project"
+            filetype_parameter="-project"
             file_to_build=$(ls *.xcodeproj | head -n 1)
           fi
-          
+
+          echo "Building using $file_to_build with $filetype_parameter"
+
           xcodebuild build-for-testing \
+            $filetype_parameter "$file_to_build" \
             -scheme "$scheme" \
-            -"$filetype_parameter" "$file_to_build" \
             -destination "$destination"
 
       - name: Test
