@@ -1,28 +1,31 @@
-name: iOS Build and Test
+name: Build and Test (iOS)
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
+    branches: [main]
 
 jobs:
   build-and-test:
-    runs-on: macos-14  # Uses macOS with Xcode 16.x (iOS 18+ simulators)
-    
+    runs-on: macos-14
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Xcode version
         run: sudo xcode-select -s /Applications/Xcode_16.2.app
 
+      - name: Show available simulators
+        run: xcrun simctl list devices available
+
       - name: Select available iPhone simulator
         id: sim
         run: |
-          sim_name=$(xcrun simctl list devices available | grep -E "iPhone [0-9]+" | head -n 1 | awk -F '[()]' '{print $1}' | xargs)
-          echo "Selected simulator: $sim_name"
-          echo "simulator=$sim_name" >> $GITHUB_OUTPUT
+          sim=$(xcrun simctl list devices available | grep -E "iPhone.*(Booted|Shutdown)" | grep -v unavailable | head -n 1 | awk -F '[()]' '{print $1}' | xargs)
+          echo "Using simulator: $sim"
+          echo "simulator=$sim" >> $GITHUB_OUTPUT
 
       - name: Build for testing
         run: |
@@ -42,11 +45,8 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             -resultBundlePath TestResults
 
-      - name: Upload build and test results
-        if: always()
+      - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
-          name: xcode-build-results
-          path: |
-            BuildResults
-            TestResults
+          name: XcodeTestResults
+          path: TestResults
