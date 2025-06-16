@@ -23,11 +23,15 @@ jobs:
       - name: Set Up Simulator Name
         id: simulator
         run: |
+            echo "🧪 Getting available simulator..."
             SIMULATOR_INFO=$(xcrun simctl list devices available | grep -E "iPhone" | grep -v "unavailable" | head -n 1)
+            echo "📦 SIMULATOR_INFO: $SIMULATOR_INFO"
+            # Extract parts in parentheses
+            PAREN_CONTENTS=($(echo "$SIMULATOR_INFO" | grep -oE '\([^()]+\)' | tr -d '()'))
+            SIMULATOR_OS="${PAREN_CONTENTS[0]}"
             SIMULATOR_NAME=$(echo "$SIMULATOR_INFO" | sed -E 's/\s*\(.*//')
-            SIMULATOR_OS=$(echo "$SIMULATOR_INFO" | grep -oE '\([0-9]+\.[0-9]+\)' | head -n 1 | tr -d '()')
-            echo "SIMULATOR_NAME=$SIMULATOR_NAME"
-            echo "SIMULATOR_OS=$SIMULATOR_OS"
+            echo "✅ SIMULATOR_NAME=$SIMULATOR_NAME"
+            echo "✅ SIMULATOR_OS=$SIMULATOR_OS"
             echo "SIMULATOR_NAME=$SIMULATOR_NAME" >> $GITHUB_ENV
             echo "SIMULATOR_OS=$SIMULATOR_OS" >> $GITHUB_ENV
 
