@@ -1,42 +1,52 @@
-name: iOS CI
+name: iOS Build and Test
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
 
 jobs:
   build-and-test:
-    runs-on: macos-14
-
+    runs-on: macos-14  # Uses macOS with Xcode 16.x (iOS 18+ simulators)
+    
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16.2
+      - name: Set up Xcode version
         run: sudo xcode-select -s /Applications/Xcode_16.2.app
 
-      - name: Build for Testing
+      - name: Select available iPhone simulator
+        id: sim
+        run: |
+          sim_name=$(xcrun simctl list devices available | grep -E "iPhone [0-9]+" | head -n 1 | awk -F '[()]' '{print $1}' | xargs)
+          echo "Selected simulator: $sim_name"
+          echo "simulator=$sim_name" >> $GITHUB_OUTPUT
+
+      - name: Build for testing
         run: |
           xcodebuild build-for-testing \
             -project PingU.xcodeproj \
             -scheme PingU \
-            -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.4' \
+            -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.simulator }}" \
             CODE_SIGNING_ALLOWED=NO \
             -resultBundlePath BuildResults
 
-      - name: Test Without Building
+      - name: Run tests
         run: |
           xcodebuild test-without-building \
             -project PingU.xcodeproj \
             -scheme PingU \
-            -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.4' \
+            -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.simulator }}" \
             CODE_SIGNING_ALLOWED=NO \
             -resultBundlePath TestResults
 
-      - name: Upload Test Results
+      - name: Upload build and test results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: xcode-test-results
-          path: TestResults
+          name: xcode-build-results
+          path: |
+            BuildResults
+            TestResults
