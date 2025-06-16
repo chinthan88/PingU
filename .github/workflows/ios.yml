@@ -8,8 +8,8 @@ on:
 
 jobs:
   build:
-    name: Build and Test default scheme using iPhone 14 Simulator
-    runs-on: macos-14 # required for Xcode 16.x
+    name: Build and Test default scheme using iPhone Simulator
+    runs-on: macos-14 # macos-14 supports Xcode 16.x
 
     steps:
       - name: Checkout
@@ -27,39 +27,43 @@ jobs:
         id: scheme
         run: echo "default_scheme=PingU" >> $GITHUB_OUTPUT
 
+      - name: Get available iPhone simulator
+        id: sim
+        run: |
+          sim_name=$(xcrun xctrace list devices 2>&1 | grep -E '^iPhone .*Simulator' | head -n 1 | sed -E 's/ *\[.*//')
+          echo "Found simulator: $sim_name"
+          echo "device_name=$sim_name" >> $GITHUB_OUTPUT
+
       - name: Build for iOS (no signing)
         run: |
           scheme=${{ steps.scheme.outputs.default_scheme }}
-          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then 
-            filetype_parameter="workspace" 
-            file_to_build="`ls -A | grep -i \\.xcworkspace\$`" 
+          if ls *.xcworkspace 1>/dev/null 2>&1; then 
+            filetype_parameter="workspace"
+            file_to_build=$(ls *.xcworkspace | head -n 1)
           else 
-            filetype_parameter="project" 
-            file_to_build="`ls -A | grep -i \\.xcodeproj\$`" 
+            filetype_parameter="project"
+            file_to_build=$(ls *.xcodeproj | head -n 1)
           fi
+
           xcodebuild build-for-testing \
             -scheme "$scheme" \
             -"$filetype_parameter" "$file_to_build" \
-            -destination "platform=iOS Simulator,name=iPhone 14,OS=latest" \
+            -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device_name }},OS=latest" \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Run iOS Tests (no signing)
         run: |
           scheme=${{ steps.scheme.outputs.default_scheme }}
-          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then 
-            filetype_parameter="workspace" 
-            file_to_build="`ls -A | grep -i \\.xcworkspace\$`" 
+          if ls *.xcworkspace 1>/dev/null 2>&1; then 
+            filetype_parameter="workspace"
+            file_to_build=$(ls *.xcworkspace | head -n 1)
           else 
-            filetype_parameter="project" 
-            file_to_build="`ls -A | grep -i \\.xcodeproj\$`" 
+            filetype_parameter="project"
+            file_to_build=$(ls *.xcodeproj | head -n 1)
           fi
+
           xcodebuild test-without-building \
             -scheme "$scheme" \
             -"$filetype_parameter" "$file_to_build" \
-            -destination "platform=iOS Simulator,name=iPhone 14,OS=latest" \
+            -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device_name }},OS=latest" \
             CODE_SIGNING_ALLOWED=NO
-          
-          xcodebuild test-without-building \
-            -scheme "$scheme" \
-            -"$filetype_parameter" "$file_to_build" \
-            -destination "$destination"
