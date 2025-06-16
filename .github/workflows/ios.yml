@@ -32,7 +32,8 @@ jobs:
           xcodebuild build-for-testing \
             -project PingU.xcodeproj \
             -scheme PingU \
-            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.0' \
             CODE_SIGNING_ALLOWED=NO \
             -resultBundlePath BuildResults
 
@@ -41,7 +42,8 @@ jobs:
           xcodebuild test-without-building \
             -project PingU.xcodeproj \
             -scheme PingU \
-            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.0' \
             -resultBundlePath TestResults
 
       - name: Upload Test Results (optional)
